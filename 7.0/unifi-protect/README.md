@@ -79,15 +79,6 @@ Zabbix server/proxy needs HTTPS access to the controller's `{$UNIFI_IP}:{$UNIFI_
 - No recording/storage health, motion event, or stream-quality metrics are included — only application/NVR/camera connectivity and inventory.
 - Self-signed certificate verification is disabled by default (`verify_peer`/`verify_host: NO`); if you tighten this for a hostname-based setup, test connectivity again after the change.
 
-## Suggested extensions (optional, for consideration)
-
-- **NVR storage/disk health**: if/when the Integration API exposes storage utilization or recording retention metrics, add dependent items off a new master item rather than overloading the existing ones.
-- **Per-camera discovery enrichment**: extend `lld_macro_paths` with additional fields already present in the cameras payload (e.g. firmware version, IP address) if you want inventory-style items per camera beyond online/model.
-- **Doorbell-specific items**: the `nvrs` payload includes `doorbellSettings` for doorbell-capable NVRs — could be split into its own dependent items if relevant to your deployment.
-- **Zabbix Actions** wired to Slack/Teams/Email for the "Camera OFFLINE" and "API unreachable" triggers specifically, since these are the most actionable for a Protect deployment.
-- **Cross-reference with UniFi Access**: if cameras are tied to door events (e.g. via Access Hub), consider whether camera-offline alerts should be correlated with door-control monitoring in a future template.
-- **Separate API key per controller**, if you monitor multiple Protect/Network controllers — keeps revocation scoped to one environment.
-
 ## License
 
 MIT (or update to match your repository's license).
