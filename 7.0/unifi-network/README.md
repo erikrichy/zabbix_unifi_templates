@@ -2,7 +2,7 @@
 
 Zabbix 7.0 template for monitoring **UniFi Network** infrastructure (controllers such as UDM/UDR/UNVR/Cloud Gateway, or self-hosted UniFi OS) via HTTP Agent items, without requiring external scripts, a Zabbix proxy, or agents on the UniFi devices themselves. All communication goes directly from the Zabbix server/proxy to the UniFi controller over HTTPS.
 
-> **Scope note:** This template is primarily designed for **UniFi OS running as a VM / Network application** (i.e. the controller software itself), and focuses on **device, client, WiFi and switch-port level monitoring**. It does **not** include WAN monitoring, ISP/uplink health, firewall, gateway routing, VPN, or any other security-appliance-level checks — those belong to a separate template/scope and are intentionally out of bounds here.
+> **Scope note:** This template is primarily designed for **UniFi OS running as a VM** (i.e. the controller software itself), and focuses on **device, client, WiFi and switch-port level monitoring**. It does **not** include WAN monitoring, ISP/uplink health, firewall, gateway routing, VPN, or any other security-appliance-level checks — those belong to a separate template/scope and are intentionally out of bounds here.
 
 The template combines **two data sources**:
 
@@ -18,13 +18,12 @@ This hybrid approach is necessary because the official Integration API, in its c
 - API availability (trigger on `nodata`, i.e. data has stopped arriving)
 - Number of pending (not-yet-adopted) devices
 
-### Devices (APs, switches, gateways) — auto-discovery
+### Devices (APs, switches) — auto-discovery
 For every device found on the network, the following items are created automatically:
 - Online/offline state
 - IP address, firmware version (inventory)
 - CPU and memory utilization (%)
 - Uptime
-- Uplink RX/TX rate
 
 Plus network-wide summary items:
 - Number of APs online / offline
@@ -71,7 +70,7 @@ For every port on every device (sourced from classic API, `port_table`):
 
 | Macro | Default | Description |
 |---|---|---|
-| `{$UNIFI.API.BASE}` | — | Controller base URL, e.g. `https://10.4.57.1:443` or a public domain behind a reverse proxy. **No trailing slash.** |
+| `{$UNIFI.API.BASE}` | — | Controller base URL, e.g. `https://ip-address:11443` or a public domain behind a reverse proxy. **No trailing slash.** |
 | `{$UNIFI.API.KEY}` | `CHANGEME` | API key for the Integration API (generated in UniFi OS) |
 | `{$UNIFI.SITE.ID}` | — | Site UUID for the Integration API (not "default" — the actual UUID, obtained via `/integration/v1/sites`) |
 | `{$UNIFI.CLASSIC.USERNAME}` | `zabbix_readonly` | Local account used for classic API login |
@@ -97,7 +96,7 @@ After importing the template, override `{$UNIFI.API.KEY}`, `{$UNIFI.CLASSIC.PASS
 
 Create a **separate local account** for this monitoring that is not used for anything else:
 
-1. UniFi OS → **Settings → Admins & Users → Add Admin/User → Add a New User**
+1. UniFi OS → **Admins & Users → Add Admin/User → Add a New User**
 2. Choose a **local account** (not a UI Account/cloud SSO) — classic login (`/api/auth/login`) only works for accounts managed locally by the controller, not Ubiquiti cloud identities.
 3. Assign a **Limited Admin** role (or equivalent) for the **Network** application only, with **View Only / Read-Only** permissions. The account must not have write/admin rights — it only needs to read state, never change configuration.
 4. Do **not** grant the account access to other applications (Protect, Access, Talk, etc.) or to any sites other than the ones you intend to monitor.
@@ -129,7 +128,7 @@ The Zabbix server/proxy needs HTTPS access to the controller's port (typically 4
 
 ## Zabbix-side setup
 
-1. Import `unifi_zabbix_template.yaml` (Data collection → Templates → Import)
+1. Import `unifi_network.yaml` (Data collection → Templates → Import)
 2. Link the template to the host representing the UniFi controller
 3. On the host, override the macros: `{$UNIFI.API.BASE}`, `{$UNIFI.API.KEY}`, `{$UNIFI.SITE.ID}`, `{$UNIFI.CLASSIC.USERNAME}`, `{$UNIFI.CLASSIC.PASSWORD}`
 4. Verify `{$UNIFI.CLASSIC.AUTH.COOKIE}` — for most UniFi OS controllers the correct value is `TOKEN`; for older/other versions, check the cookie name in the `Set-Cookie` header of the `/api/auth/login` response

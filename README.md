@@ -16,7 +16,7 @@ All templates in this repository share the same design philosophy:
 | **UniFi Network API by HTTP** | [`7.0/unifi-network/`](7.0/unifi-network/) | Controller/application status, devices (APs, switches, gateways), clients, WiFi SSIDs, switch ports |
 | **UniFi Protect** | [`7.0/unifi-protect/`](7.0/unifi-protect/) | Protect application status, NVR identity, cameras (inventory + online state) |
 
-Each subfolder has its own `README.md` with full details: what's monitored, all macros, required UniFi-side setup (API keys, dedicated accounts), known limitations, and suggested extensions. Start there before importing a template.
+Each subfolder has its own `README.md` with full details: what's monitored, all macros, required UniFi-side setup (API keys, dedicated accounts) and known limitations. Start there before importing a template.
 
 ## Repository structure
 
@@ -33,7 +33,7 @@ zabbix_unifi_templates/
         └── unifi_protect.yaml
 ```
 
-The top-level `7.0/` folder reflects the Zabbix template export format version, not the UniFi OS version. If templates for other Zabbix versions are added later, they'll live in sibling folders (e.g. `6.0/`).
+The top-level `7.0/` folder reflects the Zabbix template export format version, not the UniFi OS version.
 
 ## Requirements
 
@@ -53,15 +53,6 @@ The top-level `7.0/` folder reflects the Zabbix template export format version, 
 ## Versioning and compatibility
 
 These templates are tested against UniFi OS and Zabbix 7.0 at the time of writing. UniFi's Integration API is still evolving — endpoint shapes can change between UniFi OS releases. If an item starts returning empty/error values after a UniFi OS update, check the relevant template's README for known JSONPath/JavaScript preprocessing assumptions before opening an issue.
-
-## Contributing
-
-Issues and pull requests are welcome — in particular:
-- Reports of UniFi OS API changes that break existing items/preprocessing
-- Additional endpoints/metrics worth adding (see "Suggested extensions" in each template's README)
-- Fixes for device/model detection heuristics as new UniFi hardware ships
-
-Please don't include real IPs, domains, API keys, or site IDs in example values — use placeholders (`192.168.1.1`, `unifi.example.local`, `CHANGEME`, etc.) consistent with the existing templates.
 
 ## License
 
