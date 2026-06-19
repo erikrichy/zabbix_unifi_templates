@@ -1,0 +1,337 @@
+zabbix_export:
+  version: '7.0'
+
+  templates:
+    - uuid: 1de35d3910f841309a28226b60df4997
+      template: UniFi Protect
+      name: UniFi Protect
+      description: |
+        Monitoring of UniFi Protect via the official local Integration API.
+        No additional software required on the Zabbix server — uses HTTP Agent only.
+
+        Authentication: X-API-KEY header
+        Example: curl -k -X GET 'https://192.168.1.1/proxy/protect/integration/v1/meta/info' -H 'X-API-KEY: YOUR_KEY' -H 'Accept: application/json'
+
+        Required macros (set on the host):
+          {$UNIFI_IP}      - IP address of the UniFi controller (e.g. 192.168.1.1)
+          {$UNIFI_APIKEY}  - API key from UniFi OS → Settings → Control Plane → Integrations → API Keys
+                             Set macro type to "Secret text" to hide the value.
+
+        Optional macros:
+          {$UNIFI_PORT}    - HTTPS port, default 443
+
+        API endpoints used:
+          GET /proxy/protect/integration/v1/meta/info  — Protect application version
+          GET /proxy/protect/integration/v1/nvrs       — NVR name and model
+          GET /proxy/protect/integration/v1/cameras    — Camera list, state, model
+
+        Items collected:
+          Protect application version
+          NVR name, NVR model
+          Total camera count
+          Cameras (LLD): name, model, online/offline state
+
+        Version: 1.0
+      groups:
+        - name: Templates
+
+      macros:
+        - macro: '{$UNIFI_IP}'
+          value: '192.168.1.1'
+          description: IP address of the UniFi controller (UNVR, CloudKey, Dream Machine Pro, etc.)
+        - macro: '{$UNIFI_APIKEY}'
+          value: ''
+          type: SECRET_TEXT
+          description: API key from UniFi OS → Settings → Control Plane → Integrations → API Keys
+        - macro: '{$UNIFI_PORT}'
+          value: '443'
+          description: HTTPS port of the UniFi controller (default 443)
+
+      items:
+        # ---------------------------------------------------------------
+        # MASTER: meta/info — Protect application version
+        # Returns: { "applicationVersion": "string" }
+        # ---------------------------------------------------------------
+        - uuid: a96f126d1a49442d9b94c84fe9b9ae3e
+          name: 'Protect: Meta info (master)'
+          type: HTTP_AGENT
+          key: unifi.protect.meta.raw
+          delay: 60s
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          url: 'https://{$UNIFI_IP}:{$UNIFI_PORT}/proxy/protect/integration/v1/meta/info'
+          headers:
+            - name: X-API-KEY
+              value: '{$UNIFI_APIKEY}'
+            - name: Accept
+              value: 'application/json'
+          verify_peer: 'NO'
+          verify_host: 'NO'
+          description: 'Master item — fetches Protect application info. Used to verify API connectivity and read app version.'
+          tags:
+            - tag: component
+              value: protect
+          triggers:
+            - uuid: 95a9b5d2144d4a969b2d448e21bc53a2
+              expression: 'nodata(/UniFi Protect/unifi.protect.meta.raw,5m)=1'
+              name: 'Protect: API unreachable (>5 min)'
+              priority: HIGH
+              description: 'Zabbix cannot reach the UniFi Protect API. Check IP address, API key, or controller availability.'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: availability
+
+        # ---------------------------------------------------------------
+        # MASTER: nvrs — NVR details
+        # Returns: [{ "id": "string", "modelKey": "string", "name": {...}, "doorbellSettings": {...} }]
+        # ---------------------------------------------------------------
+        - uuid: 400779e36613419882e445058f5c1f28
+          name: 'Protect: NVR JSON (master)'
+          type: HTTP_AGENT
+          key: unifi.protect.nvr.raw
+          delay: 60s
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          url: 'https://{$UNIFI_IP}:{$UNIFI_PORT}/proxy/protect/integration/v1/nvrs'
+          headers:
+            - name: X-API-KEY
+              value: '{$UNIFI_APIKEY}'
+            - name: Accept
+              value: 'application/json'
+          verify_peer: 'NO'
+          verify_host: 'NO'
+          description: 'Master item — fetches NVR details. Returns array, items read from $[0].'
+          tags:
+            - tag: component
+              value: protect
+
+        # ---------------------------------------------------------------
+        # MASTER: cameras — Camera list
+        # Returns: [{ "id": "string", "modelKey": "string", "state": "CONNECTED|DISCONNECTED", "name": {...}, "mac": "string", ... }]
+        # ---------------------------------------------------------------
+        - uuid: 8e49b750c7564e378e6a4a3b01cb6b6f
+          name: 'Protect: Cameras JSON (master)'
+          type: HTTP_AGENT
+          key: unifi.protect.cameras.raw
+          delay: 60s
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          url: 'https://{$UNIFI_IP}:{$UNIFI_PORT}/proxy/protect/integration/v1/cameras'
+          headers:
+            - name: X-API-KEY
+              value: '{$UNIFI_APIKEY}'
+            - name: Accept
+              value: 'application/json'
+          verify_peer: 'NO'
+          verify_host: 'NO'
+          description: 'Master item — fetches full camera list. Returns array used by LLD discovery and camera items.'
+          tags:
+            - tag: component
+              value: protect
+
+        # ---------------------------------------------------------------
+        # DEPENDENT: Protect application version — from unifi.protect.meta.raw
+        # ---------------------------------------------------------------
+        - uuid: 59011d384b574fe9830417ef1f5b8e91
+          name: 'Protect: Application version'
+          type: DEPENDENT
+          key: unifi.protect.app.version
+          master_item:
+            key: unifi.protect.meta.raw
+          delay: '0'
+          history: 30d
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.applicationVersion'
+          description: 'UniFi Protect application version.'
+          tags:
+            - tag: component
+              value: protect
+          triggers:
+            - uuid: ffe7e9b7d2244c919b46f7d15cf8a8f2
+              expression: 'change(/UniFi Protect/unifi.protect.app.version)<>0 and last(/UniFi Protect/unifi.protect.app.version)<>""'
+              name: 'Protect: Application version changed'
+              priority: INFO
+              description: 'Protect application has been updated or downgraded.'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: notice
+
+        # ---------------------------------------------------------------
+        # DEPENDENT: NVR name and model — from unifi.protect.nvr.raw
+        # ---------------------------------------------------------------
+        - uuid: 46ed2c12d5a649c389a83d3a0b5fd138
+          name: 'Protect: NVR name'
+          type: DEPENDENT
+          key: unifi.protect.nvr.name
+          master_item:
+            key: unifi.protect.nvr.raw
+          delay: '0'
+          history: 30d
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.name'
+          description: 'Name of the NVR as configured in Protect.'
+          tags:
+            - tag: component
+              value: protect
+
+        - uuid: 9d85d65988a4400b883515f313117631
+          name: 'Protect: NVR model'
+          type: DEPENDENT
+          key: unifi.protect.nvr.model
+          master_item:
+            key: unifi.protect.nvr.raw
+          delay: '0'
+          history: 30d
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.modelKey'
+          description: 'Model key of the NVR (e.g. nvr, unvr, udmpro).'
+          tags:
+            - tag: component
+              value: protect
+
+        # ---------------------------------------------------------------
+        # DEPENDENT: Total camera count — from unifi.protect.cameras.raw
+        # ---------------------------------------------------------------
+        - uuid: 94b0774ea25f4832aeccf8cea9479e92
+          name: 'Protect: Total cameras'
+          type: DEPENDENT
+          key: unifi.protect.cameras.count
+          master_item:
+            key: unifi.protect.cameras.raw
+          delay: '0'
+          history: 30d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.length()'
+          description: 'Total number of cameras adopted by this controller regardless of connection state.'
+          tags:
+            - tag: component
+              value: protect
+
+        - uuid: 7c9f1b2e4d5a4c8b9a3e6f0d2b1a8c5e
+          name: 'Protect: Online cameras'
+          type: DEPENDENT
+          key: unifi.protect.cameras.online
+          master_item:
+            key: unifi.protect.cameras.raw
+          delay: '0'
+          history: 30d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$[?(@.state=="CONNECTED")].length()'
+          description: 'Number of cameras currently connected (state = CONNECTED).'
+          tags:
+            - tag: component
+              value: protect
+
+      discovery_rules:
+        # ---------------------------------------------------------------
+        # LLD: Camera discovery — from unifi.protect.cameras.raw
+        # Each camera: id, modelKey, state, name, mac
+        # ---------------------------------------------------------------
+        - uuid: 89876199cddf4533adeb700aac38bbaa
+          name: 'Discovery: Protect cameras'
+          type: DEPENDENT
+          key: unifi.protect.cameras.discovery
+          master_item:
+            key: unifi.protect.cameras.raw
+          delay: '0'
+          lifetime: 7d
+          description: 'Automatically discovers all adopted cameras from the Protect Integration API.'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$[*]'
+            - type: NOT_MATCHES_REGEX
+              parameters:
+                - '^\[\]$'
+              error_handler: DISCARD_VALUE
+          lld_macro_paths:
+            - lld_macro: '{#CAM_ID}'
+              path: '$.id'
+            - lld_macro: '{#CAM_NAME}'
+              path: '$.name'
+            - lld_macro: '{#CAM_MAC}'
+              path: '$.mac'
+            - lld_macro: '{#CAM_MODEL}'
+              path: '$.modelKey'
+          item_prototypes:
+            - uuid: a5f63e2cf4a54179a11902f7bb70cec0
+              name: 'Camera [{#CAM_NAME}]: Online (1=yes, 0=no)'
+              type: DEPENDENT
+              key: 'unifi.protect.camera.online[{#CAM_ID}]'
+              master_item:
+                key: unifi.protect.cameras.raw
+              delay: '0'
+              history: 30d
+              value_type: UNSIGNED
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.id=="{#CAM_ID}")].state.first()'
+                - type: JAVASCRIPT
+                  parameters:
+                    - 'return value === "CONNECTED" ? 1 : 0;'
+              description: '1 = camera connected, 0 = camera disconnected or connecting.'
+              tags:
+                - tag: component
+                  value: camera
+                - tag: camera
+                  value: '{#CAM_NAME}'
+
+            - uuid: b1a2d602a0c744cb9fd3a4bd434248e4
+              name: 'Camera [{#CAM_NAME}]: Model'
+              type: DEPENDENT
+              key: 'unifi.protect.camera.model[{#CAM_ID}]'
+              master_item:
+                key: unifi.protect.cameras.raw
+              delay: '0'
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.id=="{#CAM_ID}")].modelKey.first()'
+              description: 'Camera model key (e.g. UVC-G4-PRO, UVC-G5-BULLET).'
+              tags:
+                - tag: component
+                  value: camera
+                - tag: camera
+                  value: '{#CAM_NAME}'
+
+          trigger_prototypes:
+            - uuid: c8ad1ca4d44a426d8114e30d8f5da5b9
+              expression: 'last(/UniFi Protect/unifi.protect.camera.online[{#CAM_ID}])=0'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/UniFi Protect/unifi.protect.camera.online[{#CAM_ID}])=1'
+              name: 'Camera [{#CAM_NAME}]: OFFLINE'
+              priority: HIGH
+              description: 'Camera {#CAM_NAME} ({#CAM_MODEL}) is not connected to the controller.'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: availability
+                - tag: camera
+                  value: '{#CAM_NAME}'

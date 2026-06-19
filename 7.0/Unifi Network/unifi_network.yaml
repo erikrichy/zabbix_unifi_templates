@@ -1,0 +1,1157 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+  - uuid: afb3853934f04b949168038375fc1e26
+    name: Templates/Network devices
+  templates:
+  - uuid: e7478a5a536e47caae62b8ab001513ac
+    template: UniFi Network API by HTTP
+    name: UniFi Network API by HTTP
+    description: UniFi Network hybrid template for Zabbix 7.0 - CLEAN + SUMMARY + PORT FIX + PORT TRIGGERS variant.
+    groups:
+    - name: Templates/Network devices
+    macros:
+    - macro: '{$UNIFI.API.BASE}'
+      value: https://unifi.example.local:11443
+    - macro: '{$UNIFI.API.KEY}'
+      value: CHANGEME
+    - macro: '{$UNIFI.SITE.ID}'
+      value: 00000000-0000-0000-0000-000000000000
+    - macro: '{$UNIFI.CLASSIC.USERNAME}'
+      value: zabbix_readonly
+    - macro: '{$UNIFI.CLASSIC.PASSWORD}'
+      value: CHANGEME
+    - macro: '{$UNIFI.CLASSIC.SITE}'
+      value: default
+    - macro: '{$UNIFI.CLASSIC.AUTH.COOKIE}'
+      value: TOKEN
+    - macro: '{$UNIFI.API.TIMEOUT}'
+      value: 10s
+    - macro: '{$UNIFI.POLL.INFO}'
+      value: 5m
+    - macro: '{$UNIFI.POLL.SITES}'
+      value: 30m
+    - macro: '{$UNIFI.POLL.DEVICES}'
+      value: 2m
+    - macro: '{$UNIFI.POLL.CLIENTS}'
+      value: 2m
+    - macro: '{$UNIFI.POLL.WIFI}'
+      value: 10m
+    - macro: '{$UNIFI.POLL.DEVICE.STATS}'
+      value: 2m
+    - macro: '{$UNIFI.DATA.STALE}'
+      value: 10m
+    - macro: '{$UNIFI.CPU.HIGH}'
+      value: '90'
+    - macro: '{$UNIFI.MEM.HIGH}'
+      value: '90'
+    items:
+    - uuid: d9d287092afe45688655589e269ebbfd
+      name: Application info raw
+      type: HTTP_AGENT
+      key: unifi.info.raw
+      delay: '{$UNIFI.POLL.INFO}'
+      history: 1d
+      trends: '0'
+      value_type: TEXT
+      url: '{$UNIFI.API.BASE}/proxy/network/integration/v1/info'
+      timeout: '{$UNIFI.API.TIMEOUT}'
+      headers:
+      - name: Accept
+        value: application/json
+      - name: X-API-KEY
+        value: '{$UNIFI.API.KEY}'
+      output_format: JSON
+      tags:
+      - tag: component
+        value: raw
+      triggers:
+      - uuid: b5ddc920e9754254ae8af1ca7ddf4ab0
+        expression: nodata(/UniFi Network API by HTTP/unifi.info.raw,{$UNIFI.DATA.STALE})=1
+        name: UniFi API info has not been updated for {$UNIFI.DATA.STALE}
+        priority: HIGH
+    - uuid: 165546acfd0f4d1e84da1619eb676091
+      name: Sites raw
+      type: HTTP_AGENT
+      key: unifi.sites.raw
+      delay: '{$UNIFI.POLL.SITES}'
+      history: 1d
+      trends: '0'
+      value_type: TEXT
+      url: '{$UNIFI.API.BASE}/proxy/network/integration/v1/sites?limit=200&offset=0'
+      timeout: '{$UNIFI.API.TIMEOUT}'
+      headers:
+      - name: Accept
+        value: application/json
+      - name: X-API-KEY
+        value: '{$UNIFI.API.KEY}'
+      output_format: JSON
+      tags:
+      - tag: component
+        value: raw
+    - uuid: 0750a82b1f604a25ac73539e00290ffb
+      name: Devices raw
+      type: HTTP_AGENT
+      key: unifi.devices.raw
+      delay: '{$UNIFI.POLL.DEVICES}'
+      history: 1d
+      trends: '0'
+      value_type: TEXT
+      url: '{$UNIFI.API.BASE}/proxy/network/integration/v1/sites/{$UNIFI.SITE.ID}/devices?limit=200&offset=0'
+      timeout: '{$UNIFI.API.TIMEOUT}'
+      headers:
+      - name: Accept
+        value: application/json
+      - name: X-API-KEY
+        value: '{$UNIFI.API.KEY}'
+      output_format: JSON
+      tags:
+      - tag: component
+        value: raw
+      triggers:
+      - uuid: 57077a3819394a60b8d771620f04854e
+        expression: nodata(/UniFi Network API by HTTP/unifi.devices.raw,{$UNIFI.DATA.STALE})=1
+        name: UniFi devices data has not been updated for {$UNIFI.DATA.STALE}
+        priority: HIGH
+    - uuid: 7215a37528c0476db9f0b97530e9aa14
+      name: Clients raw (official)
+      type: HTTP_AGENT
+      key: unifi.clients.raw
+      delay: '{$UNIFI.POLL.CLIENTS}'
+      history: 1d
+      trends: '0'
+      value_type: TEXT
+      url: '{$UNIFI.API.BASE}/proxy/network/integration/v1/sites/{$UNIFI.SITE.ID}/clients?limit=200&offset=0'
+      timeout: '{$UNIFI.API.TIMEOUT}'
+      headers:
+      - name: Accept
+        value: application/json
+      - name: X-API-KEY
+        value: '{$UNIFI.API.KEY}'
+      output_format: JSON
+      tags:
+      - tag: component
+        value: raw
+    - uuid: cdfd43f6ee3548c581f1ebe7bedbe846
+      name: WiFi broadcasts raw
+      type: HTTP_AGENT
+      key: unifi.wifi.raw
+      delay: '{$UNIFI.POLL.WIFI}'
+      history: 1d
+      trends: '0'
+      value_type: TEXT
+      url: '{$UNIFI.API.BASE}/proxy/network/integration/v1/sites/{$UNIFI.SITE.ID}/wifi/broadcasts?limit=200&offset=0'
+      timeout: '{$UNIFI.API.TIMEOUT}'
+      headers:
+      - name: Accept
+        value: application/json
+      - name: X-API-KEY
+        value: '{$UNIFI.API.KEY}'
+      output_format: JSON
+      tags:
+      - tag: component
+        value: raw
+    - uuid: f10f5030fb4e4633a546bd12d35a76b3
+      name: Pending devices raw
+      type: HTTP_AGENT
+      key: unifi.pending.raw
+      delay: '{$UNIFI.POLL.DEVICES}'
+      history: 1d
+      trends: '0'
+      value_type: TEXT
+      url: '{$UNIFI.API.BASE}/proxy/network/integration/v1/pending-devices?limit=200&offset=0'
+      timeout: '{$UNIFI.API.TIMEOUT}'
+      headers:
+      - name: Accept
+        value: application/json
+      - name: X-API-KEY
+        value: '{$UNIFI.API.KEY}'
+      output_format: JSON
+      tags:
+      - tag: component
+        value: raw
+    - uuid: 2d471cdde7184fdf88ef5cdd9bfe49dc
+      name: _internal Classic clients raw (SSID hybrid)
+      type: HTTP_AGENT
+      key: unifi.classic.clients.raw
+      delay: '{$UNIFI.POLL.CLIENTS}'
+      history: 1d
+      trends: '0'
+      value_type: TEXT
+      url: '{$UNIFI.API.BASE}/api/auth/login'
+      timeout: '{$UNIFI.API.TIMEOUT}'
+      headers:
+      - name: Accept
+        value: application/json
+      - name: X-API-KEY
+        value: '{$UNIFI.API.KEY}'
+      output_format: JSON
+      tags:
+      - tag: component
+        value: raw
+      - tag: component
+        value: internal
+      request_method: POST
+      retrieve_mode: BOTH
+      post_type: JSON
+      posts: |-
+        {
+          "username": "{$UNIFI.CLASSIC.USERNAME}",
+          "password": "{$UNIFI.CLASSIC.PASSWORD}"
+        }
+      preprocessing:
+      - type: REGEX
+        parameters:
+        - '{$UNIFI.CLASSIC.AUTH.COOKIE}=([^;]+);'
+        - \1
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          try { var u='{$UNIFI.API.BASE}/proxy/network/api/s/{$UNIFI.CLASSIC.SITE}/stat/sta'; var r=new HttpRequest(); r.addHeader('Accept: application/json'); r.addHeader('Cookie: {$UNIFI.CLASSIC.AUTH.COOKIE}='+value); var x=r.get(u); if(r.getStatus()!=200) throw 'status='+r.getStatus()+' body='+x; return x; } catch(e){ throw 'Classic sta fetch failed: '+e; }
+      triggers:
+      - uuid: 0bda0eeee5ed4eb99a8c36cc412274f6
+        expression: nodata(/UniFi Network API by HTTP/unifi.classic.clients.raw,{$UNIFI.DATA.STALE})=1
+        name: UniFi classic client fetch has not been updated for {$UNIFI.DATA.STALE}
+        priority: HIGH
+    - uuid: 3630c86bdb0e4ce2a0f960ac7f6cc0be
+      name: _internal Classic devices raw (ports hybrid)
+      type: HTTP_AGENT
+      key: unifi.classic.devices.raw
+      delay: '{$UNIFI.POLL.DEVICES}'
+      history: 1d
+      trends: '0'
+      value_type: TEXT
+      url: '{$UNIFI.API.BASE}/api/auth/login'
+      timeout: '{$UNIFI.API.TIMEOUT}'
+      headers:
+      - name: Accept
+        value: application/json
+      - name: X-API-KEY
+        value: '{$UNIFI.API.KEY}'
+      output_format: JSON
+      tags:
+      - tag: component
+        value: raw
+      - tag: component
+        value: internal
+      - tag: component
+        value: port
+      request_method: POST
+      retrieve_mode: BOTH
+      post_type: JSON
+      posts: |-
+        {
+          "username": "{$UNIFI.CLASSIC.USERNAME}",
+          "password": "{$UNIFI.CLASSIC.PASSWORD}"
+        }
+      preprocessing:
+      - type: REGEX
+        parameters:
+        - '{$UNIFI.CLASSIC.AUTH.COOKIE}=([^;]+);'
+        - \1
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          try { var u='{$UNIFI.API.BASE}/proxy/network/api/s/{$UNIFI.CLASSIC.SITE}/stat/device'; var r=new HttpRequest(); r.addHeader('Accept: application/json'); r.addHeader('Cookie: {$UNIFI.CLASSIC.AUTH.COOKIE}='+value); var x=r.get(u); if(r.getStatus()!=200) throw 'status='+r.getStatus()+' body='+x; return x; } catch(e){ throw 'Classic device fetch failed: '+e; }
+      triggers:
+      - uuid: 4ab6cf4f549441cd8adebc0fc664106f
+        expression: nodata(/UniFi Network API by HTTP/unifi.classic.devices.raw,{$UNIFI.DATA.STALE})=1
+        name: UniFi classic device fetch has not been updated for {$UNIFI.DATA.STALE}
+        priority: HIGH
+    - uuid: a0fd717a6f944a1699c460a0098a46b5
+      name: Application version
+      type: DEPENDENT
+      key: unifi.application.version
+      delay: '0'
+      history: 30d
+      trends: '0'
+      value_type: CHAR
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.body.applicationVersion
+      master_item:
+        key: unifi.info.raw
+      tags:
+      - tag: component
+        value: application
+    - uuid: b21ba42e099848d3a66a1e2ed7b1bd77
+      name: _internal Sites data array
+      type: DEPENDENT
+      key: unifi.sites.data
+      delay: '0'
+      history: '0'
+      trends: '0'
+      value_type: TEXT
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.body.data
+        error_handler: CUSTOM_VALUE
+        error_handler_params: '[]'
+      master_item:
+        key: unifi.sites.raw
+      tags:
+      - tag: component
+        value: internal
+    - uuid: 966401c3453045938526059513fd983f
+      name: Devices total
+      type: DEPENDENT
+      key: unifi.devices.total
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.body.totalCount
+        error_handler: CUSTOM_VALUE
+        error_handler_params: '0'
+      master_item:
+        key: unifi.devices.raw
+      tags:
+      - tag: component
+        value: device
+    - uuid: 86f7e87c5cca460eacb14e7a5922dc71
+      name: Clients total (official)
+      type: DEPENDENT
+      key: unifi.clients.total
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.body.totalCount
+        error_handler: CUSTOM_VALUE
+        error_handler_params: '0'
+      master_item:
+        key: unifi.clients.raw
+      tags:
+      - tag: component
+        value: client
+      triggers:
+      - uuid: 038a7632bc1040e2a1dd6311b969bb18
+        expression: last(/UniFi Network API by HTTP/unifi.pending.total)>0
+        name: UniFi has pending devices awaiting adoption
+        priority: INFO
+    - uuid: 7dc28191b1404f679a4c28b54e221282
+      name: WiFi broadcasts total
+      type: DEPENDENT
+      key: unifi.wifi.total
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.body.totalCount
+        error_handler: CUSTOM_VALUE
+        error_handler_params: '0'
+      master_item:
+        key: unifi.wifi.raw
+      tags:
+      - tag: component
+        value: wifi
+    - uuid: e7cb43bcb1a4476f9ba74fef971feeb9
+      name: Pending devices total
+      type: DEPENDENT
+      key: unifi.pending.total
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.body.totalCount
+        error_handler: CUSTOM_VALUE
+        error_handler_params: '0'
+      master_item:
+        key: unifi.pending.raw
+      tags:
+      - tag: component
+        value: device
+    - uuid: a7ba359d7d574060a7bb5ab2868ca028
+      name: _internal Devices data array
+      type: DEPENDENT
+      key: unifi.devices.data
+      delay: '0'
+      history: '0'
+      trends: '0'
+      value_type: TEXT
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.body.data
+        error_handler: CUSTOM_VALUE
+        error_handler_params: '[]'
+      master_item:
+        key: unifi.devices.raw
+      tags:
+      - tag: component
+        value: internal
+    - uuid: 88ff3637e5bb4a35853802b0b168e683
+      name: _internal WiFi data array
+      type: DEPENDENT
+      key: unifi.wifi.data
+      delay: '0'
+      history: '0'
+      trends: '0'
+      value_type: TEXT
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.body.data
+        error_handler: CUSTOM_VALUE
+        error_handler_params: '[]'
+      master_item:
+        key: unifi.wifi.raw
+      tags:
+      - tag: component
+        value: internal
+    - uuid: 23640321153241b898ae3ddd42788193
+      name: _internal SSID client counts
+      type: DEPENDENT
+      key: unifi.ssid.client.counts
+      delay: '0'
+      history: '0'
+      trends: '0'
+      value_type: TEXT
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          var src=JSON.parse(value||'{}'); var data=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]); var m={}; for(var i=0;i<data.length;i++){var c=data[i]||{}; var s=(c.essid!=null)?String(c.essid):((c.ssid!=null)?String(c.ssid):''); if(!s) continue; if(!m[s]) m[s]={name:s,count:0}; m[s].count++;} var out=[]; for(var k in m) out.push(m[k]); return JSON.stringify(out);
+      master_item:
+        key: unifi.classic.clients.raw
+      tags:
+      - tag: component
+        value: internal
+      - tag: component
+        value: wifi
+    - uuid: 0091df14f5df4ceea41beb87b91c467a
+      name: _internal Flattened ports data
+      type: DEPENDENT
+      key: unifi.ports.data
+      delay: '0'
+      history: '0'
+      trends: '0'
+      value_type: TEXT
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          var src=JSON.parse(value||'{}'); var devs=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]); var out=[]; for(var i=0;i<devs.length;i++){var d=devs[i]||{}; var did=String(d._id||d.id||d.deviceId||d.mac||d.macAddress||''); var dn=String(d.name||d.hostname||d.mac||d.macAddress||''); var pt=[]; if(Array.isArray(d.port_table)) pt=d.port_table; else if(Array.isArray(d.ports)) pt=d.ports; else if(d.interfaces&&Array.isArray(d.interfaces.ports)) pt=d.interfaces.ports; for(var p=0;p<pt.length;p++){var x=pt[p]||{}; var idx=(x.port_idx!=null)?String(x.port_idx):((x.idx!=null)?String(x.idx):((x.index!=null)?String(x.index):String(p+1))); var pn=(x.name!=null&&String(x.name)!=='')?String(x.name):((x.port_name!=null&&String(x.port_name)!=='')?String(x.port_name):('Port '+idx)); var up=(x.up===true||String(x.state||'').toUpperCase()==='UP'||String(x.status||'').toUpperCase()==='UP'||Number(x.link)===1)?1:0; var speed=0; if(x.speedMbps!=null) speed=Number(x.speedMbps)*1000000; else if(x.speed!=null&&Number(x.speed)<1000000) speed=Number(x.speed)*1000000; else if(x.speed!=null) speed=Number(x.speed); var rx=Number(x['rx_bytes-r']||x.rxRateBps||0), tx=Number(x['tx_bytes-r']||x.txRateBps||0), err=Number(x.rx_errors||0)+Number(x.tx_errors||0)+Number(x.errors||0), disc=Number(x.rx_dropped||0)+Number(x.tx_dropped||0)+Number(x.discards||0), poe=Number(x.poe_power||(x.poe&&(x.poe.power||x.poe.powerW))||0); var role=''; if(x.is_uplink===true||x.uplink===true) role='UPLINK'; else if(String(x.role||'')!=='') role=String(x.role); out.push({deviceId:did,deviceName:dn,portIdx:idx,portName:pn,role:role,linkUp:up,speedBps:isNaN(speed)?0:speed,rxRateBps:isNaN(rx)?0:rx,txRateBps:isNaN(tx)?0:tx,errors:isNaN(err)?0:err,discards:isNaN(disc)?0:disc,poePowerW:isNaN(poe)?0:poe}); }} return JSON.stringify(out);
+      master_item:
+        key: unifi.classic.devices.raw
+      tags:
+      - tag: component
+        value: internal
+      - tag: component
+        value: port
+    - uuid: f1d6ada2186840fdb8b438a6a1c48056
+      name: AP online
+      type: DEPENDENT
+      key: unifi.summary.ap.online
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isAP(d){var m=String(d.model||'').toUpperCase(); return hf(d,'accessPoint')||m.startsWith('UAP')||m.startsWith('U6')||m.startsWith('U7')||m.indexOf('AP')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isAP(d)&&String(d.state||'').toUpperCase()==='ONLINE') c++;} return c;
+      master_item:
+        key: unifi.devices.data
+      tags:
+      - tag: component
+        value: summary
+      - tag: category
+        value: ap
+    - uuid: a7c56c62ec4446a6a06f8865e86384cf
+      name: AP offline
+      type: DEPENDENT
+      key: unifi.summary.ap.offline
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isAP(d){var m=String(d.model||'').toUpperCase(); return hf(d,'accessPoint')||m.startsWith('UAP')||m.startsWith('U6')||m.startsWith('U7')||m.indexOf('AP')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isAP(d)&&String(d.state||'').toUpperCase()!=='ONLINE') c++;} return c;
+      master_item:
+        key: unifi.devices.data
+      tags:
+      - tag: component
+        value: summary
+      - tag: category
+        value: ap
+    - uuid: b4700e099e9440b585fd06893603e551
+      name: Switch online
+      type: DEPENDENT
+      key: unifi.summary.switch.online
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isSW(d){var m=String(d.model||'').toUpperCase(); return hf(d,'switching')||m.startsWith('USW')||m.startsWith('US-')||m.indexOf('SW')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isSW(d)&&String(d.state||'').toUpperCase()==='ONLINE') c++;} return c;
+      master_item:
+        key: unifi.devices.data
+      tags:
+      - tag: component
+        value: summary
+      - tag: category
+        value: switch
+    - uuid: e8adb10335474519bb15f26364f0fa84
+      name: Switch offline
+      type: DEPENDENT
+      key: unifi.summary.switch.offline
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isSW(d){var m=String(d.model||'').toUpperCase(); return hf(d,'switching')||m.startsWith('USW')||m.startsWith('US-')||m.indexOf('SW')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isSW(d)&&String(d.state||'').toUpperCase()!=='ONLINE') c++;} return c;
+      master_item:
+        key: unifi.devices.data
+      tags:
+      - tag: component
+        value: summary
+      - tag: category
+        value: switch
+    - uuid: c1918825527147b18a749755b026e628
+      name: WiFi clients
+      type: DEPENDENT
+      key: unifi.clients.wifi.total
+      delay: '0'
+      history: 30d
+      trends: 365d
+      value_type: UNSIGNED
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          var src=JSON.parse(value||'{}'); var data=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]); return data.length;
+      master_item:
+        key: unifi.classic.clients.raw
+      tags:
+      - tag: component
+        value: client
+      - tag: medium
+        value: wifi
+      description: |-
+        Total number of WiFi clients derived from classic/internal stat/sta. Does not affect per-SSID counting.
+    - uuid: f2733053690e4a49a1ffd9fb3d83285e
+      name: Wired clients
+      type: CALCULATED
+      key: unifi.clients.wired.total
+      delay: '{$UNIFI.POLL.CLIENTS}'
+      history: 30d
+      trends: 365d
+      value_type: FLOAT
+      params: last(//unifi.clients.total)-last(//unifi.clients.wifi.total)
+      tags:
+      - tag: component
+        value: client
+      - tag: medium
+        value: wired
+      description: |-
+        Calculated as official all-clients total minus WiFi clients total.
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |-
+          return value < 0 ? 0 : Math.round(value);
+    discovery_rules:
+    - uuid: e04315bce370401b87187f94489a2c72
+      name: UniFi devices discovery
+      type: DEPENDENT
+      key: unifi.device.discovery
+      delay: '0'
+      lifetime: 30d
+      master_item:
+        key: unifi.devices.data
+      lld_macro_paths:
+      - lld_macro: '{#DEVICE_ID}'
+        path: $.id
+      - lld_macro: '{#DEVICE_NAME}'
+        path: $.name
+      - lld_macro: '{#DEVICE_MODEL}'
+        path: $.model
+      item_prototypes:
+      - uuid: 2cba648c4b46485da20eccfd506e94de
+        name: _internal Device object [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.obj[{#DEVICE_ID}]
+        delay: '0'
+        history: '0'
+        trends: '0'
+        value_type: TEXT
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - |-
+            var a=JSON.parse(value||'[]'); var id='{#DEVICE_ID}'; for (var i=0;i<a.length;i++){var d=a[i]||{}; if(String(d.id||d.deviceId||'')===id) return JSON.stringify(d);} return JSON.stringify({});
+        master_item:
+          key: unifi.devices.data
+        tags:
+        - tag: component
+          value: internal
+        - tag: device
+          value: '{#DEVICE_NAME}'
+      - uuid: cfea03389e6d46c590c9fb9cbb67b6ac
+        name: Device online [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.online[{#DEVICE_ID}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - |-
+            var d=JSON.parse(value||'{}'); return String(d.state||'').toUpperCase()==='ONLINE' ? 1 : 0;
+        master_item:
+          key: unifi.device.obj[{#DEVICE_ID}]
+        tags:
+        - tag: component
+          value: health
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        valuemap:
+          name: Boolean state 0/1
+      - uuid: 66d2e36ae49f4026b9c1c5f60b6ae8d8
+        name: Device IP [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.ip[{#DEVICE_ID}]
+        delay: '0'
+        history: 30d
+        trends: '0'
+        value_type: CHAR
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.ipAddress
+          error_handler: CUSTOM_VALUE
+          error_handler_params: ''
+        master_item:
+          key: unifi.device.obj[{#DEVICE_ID}]
+        tags:
+        - tag: component
+          value: inventory
+        - tag: device
+          value: '{#DEVICE_NAME}'
+      - uuid: c65051c12f3540ccb84c03040c606c8d
+        name: Device firmware [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.firmware[{#DEVICE_ID}]
+        delay: '0'
+        history: 30d
+        trends: '0'
+        value_type: CHAR
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.firmwareVersion
+          error_handler: CUSTOM_VALUE
+          error_handler_params: ''
+        master_item:
+          key: unifi.device.obj[{#DEVICE_ID}]
+        tags:
+        - tag: component
+          value: inventory
+        - tag: device
+          value: '{#DEVICE_NAME}'
+      - uuid: 00c3c80b08ba48e3aae515ff09ed9d4b
+        name: Device latest statistics raw [{#DEVICE_NAME}]
+        type: HTTP_AGENT
+        key: unifi.device.stats.raw[{#DEVICE_ID}]
+        delay: '{$UNIFI.POLL.DEVICE.STATS}'
+        history: 1d
+        trends: '0'
+        value_type: TEXT
+        url: '{$UNIFI.API.BASE}/proxy/network/integration/v1/sites/{$UNIFI.SITE.ID}/devices/{#DEVICE_ID}/statistics/latest'
+        timeout: '{$UNIFI.API.TIMEOUT}'
+        headers:
+        - name: Accept
+          value: application/json
+        - name: X-API-KEY
+          value: '{$UNIFI.API.KEY}'
+        output_format: JSON
+        tags:
+        - tag: component
+          value: raw
+        - tag: device
+          value: '{#DEVICE_NAME}'
+      - uuid: 81acc9f2fcab45afb3fe4e5553a1e458
+        name: Device CPU utilization [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.cpu[{#DEVICE_ID}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: FLOAT
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.body.cpuUtilizationPct
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.device.stats.raw[{#DEVICE_ID}]
+        tags:
+        - tag: component
+          value: cpu
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        units: '%'
+      - uuid: d364a3bfd9604868ad1059017a4dcc28
+        name: Device memory utilization [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.memory[{#DEVICE_ID}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: FLOAT
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.body.memoryUtilizationPct
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.device.stats.raw[{#DEVICE_ID}]
+        tags:
+        - tag: component
+          value: memory
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        units: '%'
+      - uuid: 87d35a52343f45daa6f270355166337d
+        name: Device uptime [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.uptime[{#DEVICE_ID}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.body.uptimeSec
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.device.stats.raw[{#DEVICE_ID}]
+        tags:
+        - tag: component
+          value: device
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        units: uptime
+      - uuid: bb538abda5e1486595b567771e5a4c25
+        name: Device uplink RX rate [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.uplink.rx.rate[{#DEVICE_ID}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.body.uplink.rxRateBps
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.device.stats.raw[{#DEVICE_ID}]
+        tags:
+        - tag: component
+          value: network
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        units: bps
+      - uuid: e29519a98ced4fa5b29cb0f11c15e201
+        name: Device uplink TX rate [{#DEVICE_NAME}]
+        type: DEPENDENT
+        key: unifi.device.uplink.tx.rate[{#DEVICE_ID}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.body.uplink.txRateBps
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.device.stats.raw[{#DEVICE_ID}]
+        tags:
+        - tag: component
+          value: network
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        units: bps
+      trigger_prototypes:
+      - uuid: 55d28ddbdd5743bb8932000d92ecb3ae
+        expression: last(/UniFi Network API by HTTP/unifi.device.online[{#DEVICE_ID}])=0
+        name: 'UniFi device is offline: {#DEVICE_NAME}'
+        priority: HIGH
+      - uuid: 17c931ff88fd4e129b6f4af48a171df4
+        expression: avg(/UniFi Network API by HTTP/unifi.device.cpu[{#DEVICE_ID}],10m)>{$UNIFI.CPU.HIGH}
+        name: 'High CPU on UniFi device: {#DEVICE_NAME}'
+        priority: WARNING
+      - uuid: 77d8f51d86cf45629a1a18136643cbf9
+        expression: avg(/UniFi Network API by HTTP/unifi.device.memory[{#DEVICE_ID}],10m)>{$UNIFI.MEM.HIGH}
+        name: 'High memory on UniFi device: {#DEVICE_NAME}'
+        priority: WARNING
+    - uuid: 74c9c378713b4144823fa1d6d8a2972b
+      name: UniFi WiFi broadcasts discovery
+      type: DEPENDENT
+      key: unifi.ssid.discovery
+      delay: '0'
+      lifetime: 30d
+      master_item:
+        key: unifi.wifi.data
+      lld_macro_paths:
+      - lld_macro: '{#WIFI_ID}'
+        path: $.id
+      - lld_macro: '{#SSID_NAME}'
+        path: $.name
+      item_prototypes:
+      - uuid: 8322b90b1d87457b9b9a0e77bb21b6b9
+        name: _internal SSID object [{#SSID_NAME}]
+        type: DEPENDENT
+        key: unifi.ssid.obj[{#WIFI_ID}]
+        delay: '0'
+        history: '0'
+        trends: '0'
+        value_type: TEXT
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - |-
+            var a=JSON.parse(value||'[]'); var id='{#WIFI_ID}'; for (var i=0;i<a.length;i++){var d=a[i]||{}; if(String(d.id||'')===id) return JSON.stringify(d);} return JSON.stringify({});
+        master_item:
+          key: unifi.wifi.data
+        tags:
+        - tag: component
+          value: internal
+        - tag: ssid
+          value: '{#SSID_NAME}'
+      - uuid: c2c7860a5b52421ba728fd90660540fa
+        name: SSID enabled [{#SSID_NAME}]
+        type: DEPENDENT
+        key: unifi.ssid.enabled[{#WIFI_ID}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - |-
+            var d=JSON.parse(value||'{}'); return d.enabled===true ? 1 : 0;
+        master_item:
+          key: unifi.ssid.obj[{#WIFI_ID}]
+        tags:
+        - tag: component
+          value: wifi
+        - tag: ssid
+          value: '{#SSID_NAME}'
+        valuemap:
+          name: Boolean state 0/1
+      - uuid: d7ddafc6911c4e379118a26eeb4230c2
+        name: SSID bands [{#SSID_NAME}]
+        type: DEPENDENT
+        key: unifi.ssid.bands[{#WIFI_ID}]
+        delay: '0'
+        history: 30d
+        trends: '0'
+        value_type: CHAR
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - |-
+            var d=JSON.parse(value||'{}'); var a=d.broadcastingFrequenciesGHz||[]; return Array.isArray(a)?a.join(','):String(a||'');
+        master_item:
+          key: unifi.ssid.obj[{#WIFI_ID}]
+        tags:
+        - tag: component
+          value: wifi
+        - tag: ssid
+          value: '{#SSID_NAME}'
+      - uuid: c464c1670fb84356bb30aee409e37583
+        name: SSID clients connected [{#SSID_NAME}]
+        type: DEPENDENT
+        key: unifi.ssid.clients[{#WIFI_ID}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - |-
+            var a=JSON.parse(value||'[]'); var n='{#SSID_NAME}'; for(var i=0;i<a.length;i++){var e=a[i]||{}; if(String(e.name||'')===n) return Number(e.count||0);} return 0;
+        master_item:
+          key: unifi.ssid.client.counts
+        tags:
+        - tag: component
+          value: wifi
+        - tag: ssid
+          value: '{#SSID_NAME}'
+      trigger_prototypes:
+      - uuid: 9d52900a26c04d6e906a692000791bb1
+        expression: last(/UniFi Network API by HTTP/unifi.ssid.enabled[{#WIFI_ID}])=0
+        name: 'WiFi broadcast is disabled: {#SSID_NAME}'
+        priority: WARNING
+        manual_close: 'YES'
+    - uuid: 08996655e0ac43f6908e1927259ace0d
+      name: UniFi ports discovery
+      type: DEPENDENT
+      key: unifi.port.discovery
+      delay: '0'
+      lifetime: 30d
+      master_item:
+        key: unifi.ports.data
+      lld_macro_paths:
+      - lld_macro: '{#DEVICE_ID}'
+        path: $.deviceId
+      - lld_macro: '{#DEVICE_NAME}'
+        path: $.deviceName
+      - lld_macro: '{#PORT_IDX}'
+        path: $.portIdx
+      - lld_macro: '{#PORT_NAME}'
+        path: $.portName
+      - lld_macro: '{#ROLE}'
+        path: $.role
+      item_prototypes:
+      - uuid: 1708460bd7b34ac18d1aed3e99d4a468
+        name: _internal Port object [{#DEVICE_NAME}:{#PORT_NAME}]
+        type: DEPENDENT
+        key: unifi.port.obj[{#DEVICE_ID},{#PORT_IDX}]
+        delay: '0'
+        history: '0'
+        trends: '0'
+        value_type: TEXT
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - |-
+            var a=JSON.parse(value||'[]'); var did='{#DEVICE_ID}'; var idx='{#PORT_IDX}'; for (var i=0;i<a.length;i++){var p=a[i]||{}; if(String(p.deviceId||'')===did && String(p.portIdx||'')===idx) return JSON.stringify(p);} return JSON.stringify({});
+        master_item:
+          key: unifi.ports.data
+        tags:
+        - tag: component
+          value: internal
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        - tag: port
+          value: '{#PORT_NAME}'
+      - uuid: 056305dcf25c4ad9b1a047c3eeab2a39
+        name: Port link state [{#DEVICE_NAME}:{#PORT_NAME}]
+        type: DEPENDENT
+        key: unifi.port.link.up[{#DEVICE_ID},{#PORT_IDX}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.linkUp
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.port.obj[{#DEVICE_ID},{#PORT_IDX}]
+        tags:
+        - tag: component
+          value: port
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        - tag: port
+          value: '{#PORT_NAME}'
+        valuemap:
+          name: Boolean state 0/1
+      - uuid: 4270a646325f4fd091b13bd23592777f
+        name: Port speed [{#DEVICE_NAME}:{#PORT_NAME}]
+        type: DEPENDENT
+        key: unifi.port.speed.bps[{#DEVICE_ID},{#PORT_IDX}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.speedBps
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.port.obj[{#DEVICE_ID},{#PORT_IDX}]
+        tags:
+        - tag: component
+          value: port
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        - tag: port
+          value: '{#PORT_NAME}'
+        units: bps
+      - uuid: ace7076e0c4643c186a5bf1f9f930423
+        name: Port RX bytes/s [{#DEVICE_NAME}:{#PORT_NAME}]
+        type: DEPENDENT
+        key: unifi.port.rx.rate[{#DEVICE_ID},{#PORT_IDX}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: FLOAT
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.rxRateBps
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.port.obj[{#DEVICE_ID},{#PORT_IDX}]
+        tags:
+        - tag: component
+          value: port
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        - tag: port
+          value: '{#PORT_NAME}'
+        units: Bps
+      - uuid: aa3095e3edd6428095e0e52896345303
+        name: Port TX bytes/s [{#DEVICE_NAME}:{#PORT_NAME}]
+        type: DEPENDENT
+        key: unifi.port.tx.rate[{#DEVICE_ID},{#PORT_IDX}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: FLOAT
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.txRateBps
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.port.obj[{#DEVICE_ID},{#PORT_IDX}]
+        tags:
+        - tag: component
+          value: port
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        - tag: port
+          value: '{#PORT_NAME}'
+        units: Bps
+      - uuid: 1b3e85ad5de6435db327c201f71d85c5
+        name: Port errors [{#DEVICE_NAME}:{#PORT_NAME}]
+        type: DEPENDENT
+        key: unifi.port.errors[{#DEVICE_ID},{#PORT_IDX}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.errors
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.port.obj[{#DEVICE_ID},{#PORT_IDX}]
+        tags:
+        - tag: component
+          value: port
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        - tag: port
+          value: '{#PORT_NAME}'
+      - uuid: 586402e1d7834ac9863d7df68946348c
+        name: Port discards [{#DEVICE_NAME}:{#PORT_NAME}]
+        type: DEPENDENT
+        key: unifi.port.discards[{#DEVICE_ID},{#PORT_IDX}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.discards
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.port.obj[{#DEVICE_ID},{#PORT_IDX}]
+        tags:
+        - tag: component
+          value: port
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        - tag: port
+          value: '{#PORT_NAME}'
+      - uuid: 66b999303e1a4958bd217e6b6d932111
+        name: Port PoE power [{#DEVICE_NAME}:{#PORT_NAME}]
+        type: DEPENDENT
+        key: unifi.port.poe.power[{#DEVICE_ID},{#PORT_IDX}]
+        delay: '0'
+        history: 30d
+        trends: 365d
+        value_type: FLOAT
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.poePowerW
+          error_handler: CUSTOM_VALUE
+          error_handler_params: '0'
+        master_item:
+          key: unifi.port.obj[{#DEVICE_ID},{#PORT_IDX}]
+        tags:
+        - tag: component
+          value: port
+        - tag: device
+          value: '{#DEVICE_NAME}'
+        - tag: port
+          value: '{#PORT_NAME}'
+        units: W
+      trigger_prototypes:
+      - uuid: 5e9180d447d2479d8b6e12405a6681da
+        expression: last(/UniFi Network API by HTTP/unifi.port.link.up[{#DEVICE_ID},{#PORT_IDX}])=0
+        name: Port down [{#DEVICE_NAME}:{#PORT_NAME}]
+        priority: HIGH
+        status: DISABLED
+        description: |-
+          Default disabled trigger prototype. Enable manually only for ports that should be monitored.
+      - uuid: 4966bcb43ced4b128338bd4aa96279e9
+        expression: change(/UniFi Network API by HTTP/unifi.port.speed.bps[{#DEVICE_ID},{#PORT_IDX}])<>0 and last(/UniFi Network API by HTTP/unifi.port.link.up[{#DEVICE_ID},{#PORT_IDX}])=1 and min(/UniFi Network API by HTTP/unifi.port.link.up[{#DEVICE_ID},{#PORT_IDX}],3m)=1
+        name: Port speed changed [{#DEVICE_NAME}:{#PORT_NAME}]
+        priority: WARNING
+        status: DISABLED
+        description: |-
+          Default disabled trigger prototype. Fires only when negotiated speed changes while the port stays UP for at least 3 minutes. Enable manually only for ports that should be monitored.
+    valuemaps:
+    - uuid: ca1a3d4f2ffc4527bbbbf7390ccda7a4
+      name: Boolean state 0/1
+      mappings:
+      - value: '0'
+        newvalue: Down/False
+      - value: '1'
+        newvalue: Up/True
