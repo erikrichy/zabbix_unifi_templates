@@ -194,11 +194,7 @@ zabbix_export:
       request_method: POST
       retrieve_mode: BOTH
       post_type: JSON
-      posts: |-
-        {
-          "username": "{$UNIFI.CLASSIC.USERNAME}",
-          "password": "{$UNIFI.CLASSIC.PASSWORD}"
-        }
+      posts: "{\n  \"username\": \"{$UNIFI.CLASSIC.USERNAME}\",\n  \"password\": \"{$UNIFI.CLASSIC.PASSWORD}\"\n}"
       preprocessing:
       - type: REGEX
         parameters:
@@ -206,8 +202,7 @@ zabbix_export:
         - \1
       - type: JAVASCRIPT
         parameters:
-        - |-
-          try { var u='{$UNIFI.API.BASE}/proxy/network/api/s/{$UNIFI.CLASSIC.SITE}/stat/sta'; var r=new HttpRequest(); r.addHeader('Accept: application/json'); r.addHeader('Cookie: {$UNIFI.CLASSIC.AUTH.COOKIE}='+value); var x=r.get(u); if(r.getStatus()!=200) throw 'status='+r.getStatus()+' body='+x; return x; } catch(e){ throw 'Classic sta fetch failed: '+e; }
+        - 'try { var u=''{$UNIFI.API.BASE}/proxy/network/api/s/{$UNIFI.CLASSIC.SITE}/stat/sta''; var r=new HttpRequest(); r.addHeader(''Accept: application/json''); r.addHeader(''Cookie: {$UNIFI.CLASSIC.AUTH.COOKIE}=''+value); var x=r.get(u); if(r.getStatus()!=200) throw ''status=''+r.getStatus()+'' body=''+x; return x; } catch(e){ throw ''Classic sta fetch failed: ''+e; }'
       triggers:
       - uuid: 0bda0eeee5ed4eb99a8c36cc412274f6
         expression: nodata(/UniFi Network API by HTTP/unifi.classic.clients.raw,{$UNIFI.DATA.STALE})=1
@@ -239,11 +234,7 @@ zabbix_export:
       request_method: POST
       retrieve_mode: BOTH
       post_type: JSON
-      posts: |-
-        {
-          "username": "{$UNIFI.CLASSIC.USERNAME}",
-          "password": "{$UNIFI.CLASSIC.PASSWORD}"
-        }
+      posts: "{\n  \"username\": \"{$UNIFI.CLASSIC.USERNAME}\",\n  \"password\": \"{$UNIFI.CLASSIC.PASSWORD}\"\n}"
       preprocessing:
       - type: REGEX
         parameters:
@@ -251,8 +242,7 @@ zabbix_export:
         - \1
       - type: JAVASCRIPT
         parameters:
-        - |-
-          try { var u='{$UNIFI.API.BASE}/proxy/network/api/s/{$UNIFI.CLASSIC.SITE}/stat/device'; var r=new HttpRequest(); r.addHeader('Accept: application/json'); r.addHeader('Cookie: {$UNIFI.CLASSIC.AUTH.COOKIE}='+value); var x=r.get(u); if(r.getStatus()!=200) throw 'status='+r.getStatus()+' body='+x; return x; } catch(e){ throw 'Classic device fetch failed: '+e; }
+        - 'try { var u=''{$UNIFI.API.BASE}/proxy/network/api/s/{$UNIFI.CLASSIC.SITE}/stat/device''; var r=new HttpRequest(); r.addHeader(''Accept: application/json''); r.addHeader(''Cookie: {$UNIFI.CLASSIC.AUTH.COOKIE}=''+value); var x=r.get(u); if(r.getStatus()!=200) throw ''status=''+r.getStatus()+'' body=''+x; return x; } catch(e){ throw ''Classic device fetch failed: ''+e; }'
       triggers:
       - uuid: 4ab6cf4f549441cd8adebc0fc664106f
         expression: nodata(/UniFi Network API by HTTP/unifi.classic.devices.raw,{$UNIFI.DATA.STALE})=1
@@ -424,8 +414,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - |-
-          var src=JSON.parse(value||'{}'); var data=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]); var m={}; for(var i=0;i<data.length;i++){var c=data[i]||{}; var s=(c.essid!=null)?String(c.essid):((c.ssid!=null)?String(c.ssid):''); if(!s) continue; if(!m[s]) m[s]={name:s,count:0}; m[s].count++;} var out=[]; for(var k in m) out.push(m[k]); return JSON.stringify(out);
+        - var src=JSON.parse(value||'{}'); var data=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]); var m={}; for(var i=0;i<data.length;i++){var c=data[i]||{}; var s=(c.essid!=null)?String(c.essid):((c.ssid!=null)?String(c.ssid):''); if(!s) continue; if(!m[s]) m[s]={name:s,count:0}; m[s].count++;} var out=[]; for(var k in m) out.push(m[k]); return JSON.stringify(out);
       master_item:
         key: unifi.classic.clients.raw
       tags:
@@ -444,8 +433,9 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - |-
-          var src=JSON.parse(value||'{}'); var devs=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]); var out=[]; for(var i=0;i<devs.length;i++){var d=devs[i]||{}; var did=String(d._id||d.id||d.deviceId||d.mac||d.macAddress||''); var dn=String(d.name||d.hostname||d.mac||d.macAddress||''); var pt=[]; if(Array.isArray(d.port_table)) pt=d.port_table; else if(Array.isArray(d.ports)) pt=d.ports; else if(d.interfaces&&Array.isArray(d.interfaces.ports)) pt=d.interfaces.ports; for(var p=0;p<pt.length;p++){var x=pt[p]||{}; var idx=(x.port_idx!=null)?String(x.port_idx):((x.idx!=null)?String(x.idx):((x.index!=null)?String(x.index):String(p+1))); var pn=(x.name!=null&&String(x.name)!=='')?String(x.name):((x.port_name!=null&&String(x.port_name)!=='')?String(x.port_name):('Port '+idx)); var up=(x.up===true||String(x.state||'').toUpperCase()==='UP'||String(x.status||'').toUpperCase()==='UP'||Number(x.link)===1)?1:0; var speed=0; if(x.speedMbps!=null) speed=Number(x.speedMbps)*1000000; else if(x.speed!=null&&Number(x.speed)<1000000) speed=Number(x.speed)*1000000; else if(x.speed!=null) speed=Number(x.speed); var rx=Number(x['rx_bytes-r']||x.rxRateBps||0), tx=Number(x['tx_bytes-r']||x.txRateBps||0), err=Number(x.rx_errors||0)+Number(x.tx_errors||0)+Number(x.errors||0), disc=Number(x.rx_dropped||0)+Number(x.tx_dropped||0)+Number(x.discards||0), poe=Number(x.poe_power||(x.poe&&(x.poe.power||x.poe.powerW))||0); var role=''; if(x.is_uplink===true||x.uplink===true) role='UPLINK'; else if(String(x.role||'')!=='') role=String(x.role); out.push({deviceId:did,deviceName:dn,portIdx:idx,portName:pn,role:role,linkUp:up,speedBps:isNaN(speed)?0:speed,rxRateBps:isNaN(rx)?0:rx,txRateBps:isNaN(tx)?0:tx,errors:isNaN(err)?0:err,discards:isNaN(disc)?0:disc,poePowerW:isNaN(poe)?0:poe}); }} return JSON.stringify(out);
+        - "var src=JSON.parse(value||'{}');\nvar devs=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]);\nvar out=[];\nfor(var i=0;i<devs.length;i++){\n    var d=devs[i]||{};\n    var dtype=String(d.type||'').toLowerCase();\n\n    // Skip AP ports entirely. AP links will be monitored from the switch side.\n    if(dtype==='uap'){\n        continue;\n    }\n\n    var did=String(d._id||d.id||d.deviceId||d.mac||d.macAddress||'');\n    var dn=String(d.name||d.hostname||d.mac||d.macAddress||'');\n    var pt=[];\n\n    if(Array.isArray(d.port_table)) pt=d.port_table;\n    else if(Array.isArray(d.ports)) pt=d.ports;\n    else if(d.interfaces && Array.isArray(d.interfaces.ports)) pt=d.interfaces.ports;\n\n    for(var p=0;p<pt.length;p++){\n        var x=pt[p]||{};\n        var idx=(x.port_idx!=null)?String(x.port_idx):((x.idx!=null)?String(x.idx):((x.index!=null)?String(x.index):String(p+1)));\n        var pn=(x.name!=null&&String(x.name)!=='')?String(x.name):((x.port_name!=null&&String(x.port_name)!=='')?String(x.port_name):('Port\
+          \ '+idx));\n        var up=(x.up===true||String(x.state||'').toUpperCase()==='UP'||String(x.status||'').toUpperCase()==='UP'||Number(x.link)===1)?1:0;\n        var speed=0;\n        if(x.speedMbps!=null) speed=Number(x.speedMbps)*1000000;\n        else if(x.speed!=null&&Number(x.speed)<1000000) speed=Number(x.speed)*1000000;\n        else if(x.speed!=null) speed=Number(x.speed);\n        var rx=Number(x['rx_bytes-r']||x.rxRateBps||0),\n            tx=Number(x['tx_bytes-r']||x.txRateBps||0),\n            err=Number(x.rx_errors||0)+Number(x.tx_errors||0)+Number(x.errors||0),\n            disc=Number(x.rx_dropped||0)+Number(x.tx_dropped||0)+Number(x.discards||0),\n            poe=Number(x.poe_power||(x.poe&&(x.poe.power||x.poe.powerW))||0);\n        var role='';\n        if(x.is_uplink===true||x.uplink===true) role='UPLINK';\n        else if(String(x.role||'')!=='') role=String(x.role);\n        out.push({\n            deviceId:did,\n            deviceName:dn,\n            portIdx:idx,\n\
+          \            portName:pn,\n            role:role,\n            linkUp:up,\n            speedBps:isNaN(speed)?0:speed,\n            rxRateBps:isNaN(rx)?0:rx,\n            txRateBps:isNaN(tx)?0:tx,\n            errors:isNaN(err)?0:err,\n            discards:isNaN(disc)?0:disc,\n            poePowerW:isNaN(poe)?0:poe\n        });\n    }\n}\nreturn JSON.stringify(out);"
       master_item:
         key: unifi.classic.devices.raw
       tags:
@@ -464,8 +454,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - |-
-          var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isAP(d){var m=String(d.model||'').toUpperCase(); return hf(d,'accessPoint')||m.startsWith('UAP')||m.startsWith('U6')||m.startsWith('U7')||m.indexOf('AP')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isAP(d)&&String(d.state||'').toUpperCase()==='ONLINE') c++;} return c;
+        - var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isAP(d){var m=String(d.model||'').toUpperCase(); return hf(d,'accessPoint')||m.startsWith('UAP')||m.startsWith('U6')||m.startsWith('U7')||m.indexOf('AP')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isAP(d)&&String(d.state||'').toUpperCase()==='ONLINE') c++;} return c;
       master_item:
         key: unifi.devices.data
       tags:
@@ -484,8 +473,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - |-
-          var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isAP(d){var m=String(d.model||'').toUpperCase(); return hf(d,'accessPoint')||m.startsWith('UAP')||m.startsWith('U6')||m.startsWith('U7')||m.indexOf('AP')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isAP(d)&&String(d.state||'').toUpperCase()!=='ONLINE') c++;} return c;
+        - var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isAP(d){var m=String(d.model||'').toUpperCase(); return hf(d,'accessPoint')||m.startsWith('UAP')||m.startsWith('U6')||m.startsWith('U7')||m.indexOf('AP')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isAP(d)&&String(d.state||'').toUpperCase()!=='ONLINE') c++;} return c;
       master_item:
         key: unifi.devices.data
       tags:
@@ -504,8 +492,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - |-
-          var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isSW(d){var m=String(d.model||'').toUpperCase(); return hf(d,'switching')||m.startsWith('USW')||m.startsWith('US-')||m.indexOf('SW')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isSW(d)&&String(d.state||'').toUpperCase()==='ONLINE') c++;} return c;
+        - var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isSW(d){var m=String(d.model||'').toUpperCase(); return hf(d,'switching')||m.startsWith('USW')||m.startsWith('US-')||m.indexOf('SW')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isSW(d)&&String(d.state||'').toUpperCase()==='ONLINE') c++;} return c;
       master_item:
         key: unifi.devices.data
       tags:
@@ -524,8 +511,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - |-
-          var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isSW(d){var m=String(d.model||'').toUpperCase(); return hf(d,'switching')||m.startsWith('USW')||m.startsWith('US-')||m.indexOf('SW')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isSW(d)&&String(d.state||'').toUpperCase()!=='ONLINE') c++;} return c;
+        - var a=JSON.parse(value||'[]'); function hf(d,f){var x=d.features; if(Array.isArray(x)){for(var i=0;i<x.length;i++) if(String(x[i]).toLowerCase()===f.toLowerCase()) return true;} else if(x&&typeof x==='object'){if(x[f]!==null&&x[f]!==undefined) return true;} return false;} function isSW(d){var m=String(d.model||'').toUpperCase(); return hf(d,'switching')||m.startsWith('USW')||m.startsWith('US-')||m.indexOf('SW')>=0;} var c=0; for(var i=0;i<a.length;i++){var d=a[i]||{}; if(isSW(d)&&String(d.state||'').toUpperCase()!=='ONLINE') c++;} return c;
       master_item:
         key: unifi.devices.data
       tags:
@@ -544,8 +530,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - |-
-          var src=JSON.parse(value||'{}'); var data=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]); return data.length;
+        - var src=JSON.parse(value||'{}'); var data=Array.isArray(src.data)?src.data:((src.body&&Array.isArray(src.body.data))?src.body.data:[]); return data.length;
       master_item:
         key: unifi.classic.clients.raw
       tags:
@@ -553,8 +538,7 @@ zabbix_export:
         value: client
       - tag: medium
         value: wifi
-      description: |-
-        Total number of WiFi clients derived from classic/internal stat/sta. Does not affect per-SSID counting.
+      description: Total number of WiFi clients derived from classic/internal stat/sta. Does not affect per-SSID counting.
     - uuid: f2733053690e4a49a1ffd9fb3d83285e
       name: Wired clients
       type: CALCULATED
@@ -569,13 +553,11 @@ zabbix_export:
         value: client
       - tag: medium
         value: wired
-      description: |-
-        Calculated as official all-clients total minus WiFi clients total.
+      description: Calculated as official all-clients total minus WiFi clients total.
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - |-
-          return value < 0 ? 0 : Math.round(value);
+        - 'return value < 0 ? 0 : Math.round(value);'
     discovery_rules:
     - uuid: e04315bce370401b87187f94489a2c72
       name: UniFi devices discovery
@@ -604,8 +586,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - |-
-            var a=JSON.parse(value||'[]'); var id='{#DEVICE_ID}'; for (var i=0;i<a.length;i++){var d=a[i]||{}; if(String(d.id||d.deviceId||'')===id) return JSON.stringify(d);} return JSON.stringify({});
+          - var a=JSON.parse(value||'[]'); var id='{#DEVICE_ID}'; for (var i=0;i<a.length;i++){var d=a[i]||{}; if(String(d.id||d.deviceId||'')===id) return JSON.stringify(d);} return JSON.stringify({});
         master_item:
           key: unifi.devices.data
         tags:
@@ -624,8 +605,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - |-
-            var d=JSON.parse(value||'{}'); return String(d.state||'').toUpperCase()==='ONLINE' ? 1 : 0;
+          - 'var d=JSON.parse(value||''{}''); return String(d.state||'''').toUpperCase()===''ONLINE'' ? 1 : 0;'
         master_item:
           key: unifi.device.obj[{#DEVICE_ID}]
         tags:
@@ -764,50 +744,6 @@ zabbix_export:
         - tag: device
           value: '{#DEVICE_NAME}'
         units: uptime
-      - uuid: bb538abda5e1486595b567771e5a4c25
-        name: Device uplink RX rate [{#DEVICE_NAME}]
-        type: DEPENDENT
-        key: unifi.device.uplink.rx.rate[{#DEVICE_ID}]
-        delay: '0'
-        history: 30d
-        trends: 365d
-        value_type: UNSIGNED
-        preprocessing:
-        - type: JSONPATH
-          parameters:
-          - $.body.uplink.rxRateBps
-          error_handler: CUSTOM_VALUE
-          error_handler_params: '0'
-        master_item:
-          key: unifi.device.stats.raw[{#DEVICE_ID}]
-        tags:
-        - tag: component
-          value: network
-        - tag: device
-          value: '{#DEVICE_NAME}'
-        units: bps
-      - uuid: e29519a98ced4fa5b29cb0f11c15e201
-        name: Device uplink TX rate [{#DEVICE_NAME}]
-        type: DEPENDENT
-        key: unifi.device.uplink.tx.rate[{#DEVICE_ID}]
-        delay: '0'
-        history: 30d
-        trends: 365d
-        value_type: UNSIGNED
-        preprocessing:
-        - type: JSONPATH
-          parameters:
-          - $.body.uplink.txRateBps
-          error_handler: CUSTOM_VALUE
-          error_handler_params: '0'
-        master_item:
-          key: unifi.device.stats.raw[{#DEVICE_ID}]
-        tags:
-        - tag: component
-          value: network
-        - tag: device
-          value: '{#DEVICE_NAME}'
-        units: bps
       trigger_prototypes:
       - uuid: 55d28ddbdd5743bb8932000d92ecb3ae
         expression: last(/UniFi Network API by HTTP/unifi.device.online[{#DEVICE_ID}])=0
@@ -846,8 +782,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - |-
-            var a=JSON.parse(value||'[]'); var id='{#WIFI_ID}'; for (var i=0;i<a.length;i++){var d=a[i]||{}; if(String(d.id||'')===id) return JSON.stringify(d);} return JSON.stringify({});
+          - var a=JSON.parse(value||'[]'); var id='{#WIFI_ID}'; for (var i=0;i<a.length;i++){var d=a[i]||{}; if(String(d.id||'')===id) return JSON.stringify(d);} return JSON.stringify({});
         master_item:
           key: unifi.wifi.data
         tags:
@@ -866,8 +801,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - |-
-            var d=JSON.parse(value||'{}'); return d.enabled===true ? 1 : 0;
+          - 'var d=JSON.parse(value||''{}''); return d.enabled===true ? 1 : 0;'
         master_item:
           key: unifi.ssid.obj[{#WIFI_ID}]
         tags:
@@ -888,8 +822,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - |-
-            var d=JSON.parse(value||'{}'); var a=d.broadcastingFrequenciesGHz||[]; return Array.isArray(a)?a.join(','):String(a||'');
+          - var d=JSON.parse(value||'{}'); var a=d.broadcastingFrequenciesGHz||[]; return Array.isArray(a)?a.join(','):String(a||'');
         master_item:
           key: unifi.ssid.obj[{#WIFI_ID}]
         tags:
@@ -908,8 +841,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - |-
-            var a=JSON.parse(value||'[]'); var n='{#SSID_NAME}'; for(var i=0;i<a.length;i++){var e=a[i]||{}; if(String(e.name||'')===n) return Number(e.count||0);} return 0;
+          - var a=JSON.parse(value||'[]'); var n='{#SSID_NAME}'; for(var i=0;i<a.length;i++){var e=a[i]||{}; if(String(e.name||'')===n) return Number(e.count||0);} return 0;
         master_item:
           key: unifi.ssid.client.counts
         tags:
@@ -954,8 +886,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - |-
-            var a=JSON.parse(value||'[]'); var did='{#DEVICE_ID}'; var idx='{#PORT_IDX}'; for (var i=0;i<a.length;i++){var p=a[i]||{}; if(String(p.deviceId||'')===did && String(p.portIdx||'')===idx) return JSON.stringify(p);} return JSON.stringify({});
+          - var a=JSON.parse(value||'[]'); var did='{#DEVICE_ID}'; var idx='{#PORT_IDX}'; for (var i=0;i<a.length;i++){var p=a[i]||{}; if(String(p.deviceId||'')===did && String(p.portIdx||'')===idx) return JSON.stringify(p);} return JSON.stringify({});
         master_item:
           key: unifi.ports.data
         tags:
@@ -1138,15 +1069,13 @@ zabbix_export:
         name: Port down [{#DEVICE_NAME}:{#PORT_NAME}]
         priority: HIGH
         status: DISABLED
-        description: |-
-          Default disabled trigger prototype. Enable manually only for ports that should be monitored.
+        description: Default disabled trigger prototype. Enable manually only for ports that should be monitored.
       - uuid: 4966bcb43ced4b128338bd4aa96279e9
         expression: change(/UniFi Network API by HTTP/unifi.port.speed.bps[{#DEVICE_ID},{#PORT_IDX}])<>0 and last(/UniFi Network API by HTTP/unifi.port.link.up[{#DEVICE_ID},{#PORT_IDX}])=1 and min(/UniFi Network API by HTTP/unifi.port.link.up[{#DEVICE_ID},{#PORT_IDX}],3m)=1
         name: Port speed changed [{#DEVICE_NAME}:{#PORT_NAME}]
         priority: WARNING
         status: DISABLED
-        description: |-
-          Default disabled trigger prototype. Fires only when negotiated speed changes while the port stays UP for at least 3 minutes. Enable manually only for ports that should be monitored.
+        description: Default disabled trigger prototype. Fires only when negotiated speed changes while the port stays UP for at least 3 minutes. Enable manually only for ports that should be monitored.
     valuemaps:
     - uuid: ca1a3d4f2ffc4527bbbbf7390ccda7a4
       name: Boolean state 0/1
