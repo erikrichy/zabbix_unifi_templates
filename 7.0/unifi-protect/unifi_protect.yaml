@@ -245,6 +245,24 @@ zabbix_export:
             - tag: component
               value: protect
 
+        - uuid: 2d6e8a1f3c4b4d7a9e5f0b2c1a3d6e8f
+          name: 'Protect: Offline cameras'
+          type: DEPENDENT
+          key: unifi.protect.cameras.offline
+          master_item:
+            key: unifi.protect.cameras.raw
+          delay: '0'
+          history: 30d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$[?(@.state!="CONNECTED")].length()'
+          description: 'Number of cameras currently not connected (state != CONNECTED).'
+          tags:
+            - tag: component
+              value: protect
+
       discovery_rules:
         # ---------------------------------------------------------------
         # LLD: Camera discovery — from unifi.protect.cameras.raw
